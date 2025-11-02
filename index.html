@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Memory Simulator - Page Replacement Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header>
+            <div class="header-badge">OS MEMORY SIMULATOR</div>
+            <h1>Page Replacement Algorithm Visualizer</h1>
+            <p class="subtitle">Interactive real-time simulation of memory management algorithms</p>
+            <div class="status-bar">
+                <span class="status-item"><span class="status-dot"></span> Status: <strong>Ready</strong></span>
+                <span class="status-item">Version: <strong>2.0</strong></span>
+            </div>
+        </header>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h2>⚙️ Configuration</h2>
+            
+            <div class="controls-grid">
+                <!-- Algorithm Selection -->
+                <div class="control-group">
+                    <label for="algorithm">Algorithm</label>
+                    <div class="button-grid">
+                        <button class="algo-btn active" data-algo="fifo">FIFO</button>
+                        <button class="algo-btn" data-algo="lru">LRU</button>
+                        <button class="algo-btn" data-algo="optimal">Optimal</button>
+                        <button class="algo-btn" data-algo="secondChance">Clock</button>
+                        <button class="algo-btn" data-algo="lfu">LFU</button>
+                    </div>
+                </div>
+
+                <!-- Input Mode -->
+                <div class="control-group">
+                    <label>Input Mode</label>
+                    <div class="button-grid-2">
+                        <button class="mode-btn active" data-mode="random">Random</button>
+                        <button class="mode-btn" data-mode="custom">Custom</button>
+                    </div>
+                </div>
+
+                <!-- Random Settings -->
+                <div class="control-group" id="randomGroup">
+                    <label for="randomLength">Reference String Length</label>
+                    <input type="number" id="randomLength" value="15" min="5" max="50">
+                    
+                    <label for="randomMax" style="margin-top: 15px;">Max Page Number</label>
+                    <input type="number" id="randomMax" value="9" min="3" max="20">
+                </div>
+
+                <!-- Custom Input -->
+                <div class="control-group hidden" id="customGroup">
+                    <label for="referenceString">Reference String</label>
+                    <input type="text" id="referenceString" placeholder="e.g., 7, 0, 1, 2, 0, 3, 0, 4">
+                </div>
+
+                <!-- Frame Count -->
+                <div class="control-group">
+                    <label for="frameCount">Number of Frames (1-10)</label>
+                    <input type="number" id="frameCount" value="3" min="1" max="10">
+                </div>
+
+                <!-- Speed Control -->
+                <div class="control-group full-width">
+                    <label for="speedControl">Speed: <span id="speedValue">1.0x</span></label>
+                    <input type="range" id="speedControl" min="0.5" max="3" step="0.1" value="1">
+                </div>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="playback-controls">
+                <h3>Playback</h3>
+                <div class="playback-buttons">
+                    <button id="resetBtn" class="control-btn" title="Reset">
+                        <span>⟲</span> Reset
+                    </button>
+                    <button id="prevStepBtn" class="control-btn" title="Previous Step">
+                        <span>◄◄</span>
+                    </button>
+                    <button id="playPauseBtn" class="control-btn primary" title="Play">
+                        <span id="playIcon">▶</span> <span id="playText">Play</span>
+                    </button>
+                    <button id="nextStepBtn" class="control-btn" title="Next Step">
+                        <span>►►</span>
+                    </button>
+                    <button id="simulateBtn" class="control-btn accent" title="Start Simulation">
+                        <span>🚀</span> Simulate
+                    </button>
+                </div>
+            </div>
+
+            <!-- Export Options -->
+            <div class="export-section">
+                <h3>Export</h3>
+                <div class="export-buttons">
+                    <button id="screenshotBtn" class="export-btn">
+                        <span>📸</span> Screenshot
+                    </button>
+                    <button id="exportBtn" class="export-btn">
+                        <span>📊</span> Export Trace
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Visualization Area -->
+        <div class="visualization-area">
+            <h2>🖥️ Memory Visualization</h2>
+            
+            <!-- Timeline Scrubber -->
+            <div class="timeline-container">
+                <input type="range" id="timeline" min="0" max="100" value="0" class="timeline-slider" disabled>
+                <div class="timeline-label">
+                    <span>Step: <strong id="currentStep">0</strong> / <strong id="totalSteps">0</strong></span>
+                </div>
+            </div>
+
+            <!-- Memory Frames Display -->
+            <div class="memory-section">
+                <h3>Memory Frames:</h3>
+                <div id="memoryFrames" class="frames-display">
+                    <!-- Frames will be generated here -->
+                </div>
+            </div>
+
+            <!-- Queue/Stack Visualization -->
+            <div class="queue-section">
+                <h3>Queue Order:</h3>
+                <div id="queueDisplay" class="queue-display">
+                    <!-- Queue will be shown here -->
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="legend">
+                <h4>LEGEND:</h4>
+                <div class="legend-items">
+                    <span class="legend-item"><span class="legend-box normal"></span> Normal</span>
+                    <span class="legend-item"><span class="legend-box fault"></span> Fault</span>
+                    <span class="legend-item"><span class="legend-box hit"></span> Hit</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="stats-section">
+            <h2>📊 Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Page Faults</div>
+                    <div class="stat-value" id="statFaults">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Hit Rate</div>
+                    <div class="stat-value" id="statHitRate">0.0%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Frame Utilization</div>
+                    <div class="stat-value" id="statUtilization">0%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total References</div>
+                    <div class="stat-value" id="statTotal">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Step Information -->
+        <div class="step-info-section">
+            <h2>Current Step Information</h2>
+            <div id="stepInfo" class="step-info-content">
+                <p>Click <strong>Simulate</strong> to start the visualization</p>
+            </div>
+        </div>
+
+        <!-- Algorithm Description -->
+        <div class="algorithm-description">
+            <h2 id="algoTitle">FIFO</h2>
+            <p id="algoDesc">First In First Out - The simplest page replacement algorithm. Pages are replaced in the order they were loaded into memory.</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
